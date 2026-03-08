@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上線時間管理術 - 團隊對齊系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        /* 模擬紙張質感的設計 */
+        .paper-sheet {
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-radius: 8px;
+        }
+
+        /* 輸入框與底線設計 */
+        .planner-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed #cbd5e1;
+            padding: 4px 0;
+            outline: none;
+            color: #1e293b;
+            transition: border-color 0.2s;
+        }
+
+        .planner-input:focus {
+            border-bottom: 1px solid #3b82f6;
+        }
+
+        /* 自訂 Checkbox - 帶來手寫打勾的快感 */
+        .checkbox-custom {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.15em;
+            height: 1.15em;
+            border: 2px solid #64748b;
+            border-radius: 0.15em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        .checkbox-custom::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #334155;
+            background-color: #334155;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        .checkbox-custom:checked::before {
+            transform: scale(1);
+        }
+
+        .checkbox-custom:checked {
+            border-color: #334155;
+        }
+
+        /* 項目完成後的劃線效果 */
+        .task-text {
+            transition: all 0.3s ease;
+        }
+
+        .task-completed {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        /* 團隊成員標籤 Avatar Badge */
+        .avatar-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-unassigned {
+            background-color: #e2e8f0;
+            color: #64748b;
+            border: 1px dashed #94a3b8;
+        }
+
+        .avatar-a {
+            background-color: #ef4444;
+        }
+
+        /* Alice */
+        .avatar-b {
+            background-color: #3b82f6;
+        }
+
+        /* Bob */
+        .avatar-c {
+            background-color: #10b981;
+        }
+
+        /* Charlie */
+
+        /* 側邊欄捲軸 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex shrink-0 z-20 shadow-xl">
+        <div class="p-6 border-b border-slate-700 bg-slate-950">
+            <h1 class="text-xl font-bold tracking-wider leading-relaxed text-white">
+                <i class="fa-solid fa-users-viewfinder mr-2 text-indigo-400"></i>團隊對齊系統
+            </h1>
+            <p class="text-xs text-slate-400 mt-2 font-light">Team Alignment Funnel</p>
+        </div>
+
+        <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+            <div class="text-xs text-slate-400 mb-2 uppercase tracking-widest">當前在線夥伴</div>
+            <div class="flex gap-2">
+                <div class="avatar-badge avatar-a" title="Alice">A</div>
+                <div class="avatar-badge avatar-b" title="Bob">B</div>
+                <div class="avatar-badge avatar-c" title="Charlie">C</div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <!-- 團隊願景 -->
+            <button onclick="switchTab('vision')" id="tab-vision"
+                class="w-full text-left px-4 py-3 rounded-md flex items-center bg-indigo-600 text-white transition-all shadow-md">
+                <i class="fa-solid fa-crosshairs w-6 text-center"></i> 0. 團隊目標與願景
+            </button>
+
+            <!-- 漏斗系統 -->
+            <div
+                class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-6 mb-3 pl-2 flex items-center justify-between">
+                <span>共用清單漏斗</span>
+            </div>
+            <button onclick="switchTab('master')" id="tab-master"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-database w-6 text-center text-slate-400"></i> 1. 團隊首要清單 (Backlog)
+            </button>
+            <button onclick="switchTab('weekly')" id="tab-weekly"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-flag-checkered w-6 text-center text-blue-400"></i> 2. 一週衝刺清單 (Sprint)
+            </button>
+            <button onclick="switchTab('daily')" id="tab-daily"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-people-arrows w-6 text-center text-emerald-400"></i> 3. 每日對齊看板 (Standup)
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div
+        class="md:hidden fixed top-0 w-full bg-slate-900 text-white p-4 flex justify-between items-center z-50 shadow-md">
+        <h1 class="text-lg font-bold"><i class="fa-solid fa-users-viewfinder text-indigo-400 mr-2"></i>團隊對齊</h1>
+        <select onchange="switchTab(this.value)"
+            class="bg-slate-800 text-white border border-slate-700 p-2 rounded text-sm outline-none">
+            <option value="vision">0. 團隊目標與願景</option>
+            <option value="master">1. 團隊首要清單 (Backlog)</option>
+            <option value="weekly">2. 一週衝刺清單 (Sprint)</option>
+            <option value="daily">3. 每日對齊看板 (Standup)</option>
+        </select>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 relative w-full flex justify-center">
+
+        <!-- ==========================================
+             0. 團隊目標與願景 (Team Vision & OKRs)
+             ========================================== -->
+        <section id="view-vision" class="w-full max-w-5xl block animate-fade-in pb-10">
+            <div class="mb-8 border-b-2 border-slate-300 pb-4">
+                <h2 class="text-3xl font-black text-slate-800 tracking-wide flex items-center">
+                    <i class="fa-solid fa-crosshairs text-indigo-600 mr-3"></i>團隊北極星目標 (North Star)
+                </h2>
+                <p class="text-slate-500 mt-2">在認領與執行任務前，確保所有人都清楚「我們為何而戰」。這能減少無效的瞎忙。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Main Goal -->
+                <div
+                    class="col-span-1 md:col-span-2 bg-gradient-to-br from-indigo-900 to-slate-800 rounded-xl p-8 text-white shadow-lg relative overflow-hidden">
+                    <i class="fa-solid fa-rocket absolute -right-6 -bottom-6 text-8xl text-white/10"></i>
+                    <div class="text-indigo-300 font-bold tracking-widest text-sm mb-2">Q3 核心目標 (OKR)</div>
+                    <h3 class="text-3xl font-bold leading-tight mb-4">成功發布「上線時間管理」數位工具並達成 1,000 名活躍用戶</h3>
+                    <div class="w-full bg-slate-700 rounded-full h-2.5 mt-6 mb-1">
+                        <div class="bg-indigo-400 h-2.5 rounded-full" style="width: 45%"></div>
+                    </div>
+                    <div class="text-xs text-slate-300 text-right">當前進度 45%</div>
+                </div>
+
+                <!-- Team Rules -->
+                <div class="col-span-1 bg-amber-50 rounded-xl border border-amber-200 p-6 shadow-sm">
+                    <div class="text-amber-800 font-bold mb-3 flex items-center border-b border-amber-200 pb-2">
+                        <i class="fa-solid fa-handshake-angle mr-2"></i> 團隊協作守則
+                    </div>
+                    <ul class="text-sm text-amber-900 space-y-3">
+                        <li class="flex items-start"><i class="fa-solid fa-check text-amber-500 mt-1 mr-2"></i>
+                            主動從「一週清單」認領任務，不被動等待。</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-amber-500 mt-1 mr-2"></i> 遇到阻礙
+                            (Blocker) 立刻在每日看板提出。</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-amber-500 mt-1 mr-2"></i>
+                            完成任務請大方打勾，讓全隊為你慶祝。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Team Members -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h3 class="font-bold text-slate-800 mb-4">本季出戰陣容</h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-full pr-4 p-1">
+                        <div class="avatar-badge avatar-a w-8 h-8 text-sm mr-2">A</div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Alice (PM)</div>
+                            <div class="text-xs text-slate-500">負責專案時程與需求釐清</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-full pr-4 p-1">
+                        <div class="avatar-badge avatar-b w-8 h-8 text-sm mr-2">B</div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Bob (Dev)</div>
+                            <div class="text-xs text-slate-500">負責前端與架構開發</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-full pr-4 p-1">
+                        <div class="avatar-badge avatar-c w-8 h-8 text-sm mr-2">C</div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Charlie (Mkt)</div>
+                            <div class="text-xs text-slate-500">負責上市推廣與社群</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             1. 團隊首要清單 (Team Master Backlog)
+             ========================================== -->
+        <section id="view-master" class="w-full max-w-6xl hidden animate-fade-in pb-12">
+            <div class="mb-8 flex justify-between items-end border-b-2 border-slate-300 pb-4">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                        <span class="bg-slate-800 text-white px-3 py-1 mr-2 text-2xl rounded">1</span>團隊首要清單 (Backlog)
+                    </h2>
+                    <p class="text-slate-600 mt-2 text-sm">團隊的中央大腦。將所有專案與雜務以「領域」分類。每週五盤點時，從此處挑選任務進入下週衝刺。</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Category 1: 產品開發 -->
+                <div class="paper-sheet p-5 border-t-4 border-blue-500">
+                    <div
+                        class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-center">
+                        <div><i class="fa-solid fa-code text-blue-500 mr-2"></i>產品開發 (Dev)</div>
+                        <span class="text-xs font-normal text-slate-400">專案池</span>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">完成登入系統串接 Firebase</span>
+                            <div class="avatar-badge avatar-b ml-2">B</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">修復行動版 Safari 跑版問題</span>
+                            <div class="avatar-badge avatar-b ml-2">B</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span
+                                class="task-text flex-1 text-sm leading-tight mt-0.5 font-bold text-amber-600">優化資料庫查詢速度
+                                (待認領)</span>
+                            <div class="avatar-badge avatar-unassigned ml-2" title="待認領">?</div>
+                        </label>
+                        <div class="flex items-center mt-2">
+                            <i class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i>
+                            <input type="text" class="planner-input text-sm" placeholder="新增待辦項目...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 2: 產品企劃 -->
+                <div class="paper-sheet p-5 border-t-4 border-red-500">
+                    <div
+                        class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-center">
+                        <div><i class="fa-solid fa-pen-ruler text-red-500 mr-2"></i>企劃與設計 (PM/UI)</div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">產出 V2.0 系統 Wireframe</span>
+                            <div class="avatar-badge avatar-a ml-2">A</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">與客戶進行使用者訪談 (3位)</span>
+                            <div class="avatar-badge avatar-a ml-2">A</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span
+                                class="task-text flex-1 text-sm leading-tight mt-0.5 font-bold text-amber-600">撰寫操作手冊草稿
+                                (待認領)</span>
+                            <div class="avatar-badge avatar-unassigned ml-2" title="待認領">?</div>
+                        </label>
+                        <div class="flex items-center mt-2">
+                            <i class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i>
+                            <input type="text" class="planner-input text-sm" placeholder="新增待辦項目...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 3: 行銷營運 -->
+                <div class="paper-sheet p-5 border-t-4 border-emerald-500">
+                    <div
+                        class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-center">
+                        <div><i class="fa-solid fa-bullhorn text-emerald-500 mr-2"></i>行銷與營運 (Mkt)</div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">準備產品發布電子報</span>
+                            <div class="avatar-badge avatar-c ml-2">C</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span class="task-text flex-1 text-sm leading-tight mt-0.5">社群媒體本月貼文排程</span>
+                            <div class="avatar-badge avatar-c ml-2">C</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span
+                                class="task-text flex-1 text-sm leading-tight mt-0.5 font-bold text-amber-600">回覆近期使用者客訴信件
+                                (待協助)</span>
+                            <div class="avatar-badge avatar-unassigned ml-2" title="待認領">?</div>
+                        </label>
+                        <div class="flex items-center mt-2">
+                            <i class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i>
+                            <input type="text" class="planner-input text-sm" placeholder="新增待辦項目...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 4: 行政/雜務 -->
+                <div class="paper-sheet p-5 border-t-4 border-slate-400">
+                    <div
+                        class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-center">
+                        <div><i class="fa-solid fa-box-archive text-slate-400 mr-2"></i>行政與雜務 (Admin)</div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span
+                                class="task-text flex-1 text-sm leading-tight mt-0.5 font-bold text-amber-600">採買辦公室咖啡豆
+                                (待認領)</span>
+                            <div class="avatar-badge avatar-unassigned ml-2">?</div>
+                        </label>
+                        <label class="flex items-start group">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                            <span
+                                class="task-text flex-1 text-sm leading-tight mt-0.5 font-bold text-amber-600">提交上月團隊報帳單
+                                (待處理)</span>
+                            <div class="avatar-badge avatar-unassigned ml-2">?</div>
+                        </label>
+                        <div class="flex items-center mt-2">
+                            <i class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i>
+                            <input type="text" class="planner-input text-sm" placeholder="新增待辦項目...">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==========================================
+             2. 一週衝刺清單 (Team Weekly Sprint)
+             ========================================== -->
+        <section id="view-weekly" class="w-full max-w-5xl hidden animate-fade-in pb-12">
+            <div class="mb-6 flex justify-between items-end border-b-2 border-slate-300 pb-4">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                        <span class="bg-blue-600 text-white px-3 py-1 mr-2 text-2xl rounded">2</span>一週衝刺清單
+                    </h2>
+                    <p class="text-slate-600 mt-2 text-sm">從首要清單中提取。定義本週團隊的「絕對優先事項」，並透明化每個人的主要貢獻。</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-8">
+                <!-- Top Section: Team Priorities -->
+                <div class="flex flex-col md:flex-row border-b border-slate-200 bg-slate-50">
+                    <div class="w-full md:w-3/4 p-4 font-bold text-slate-800 text-lg flex items-center">
+                        <i class="fa-solid fa-fire text-red-500 mr-2"></i>本週團隊三大優先事項 (Top 3)
+                    </div>
+                    <div
+                        class="w-full md:w-1/4 p-4 font-bold text-slate-600 text-center border-t md:border-t-0 md:border-l border-slate-200">
+                        主責人 (Owner)
+                    </div>
+                </div>
+
+                <div
+                    class="flex flex-col md:flex-row border-b border-slate-200 items-stretch hover:bg-slate-50 transition">
+                    <div class="w-full md:w-3/4 p-4 flex items-center">
+                        <input type="checkbox" class="checkbox-custom mr-4">
+                        <span class="task-text font-bold text-lg text-slate-700">完成 V1.0 封閉測試版上線 (Beta Release)</span>
+                    </div>
+                    <div
+                        class="w-full md:w-1/4 p-4 flex items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 bg-white">
+                        <div class="avatar-badge avatar-b mr-1">B</div> Bob
+                    </div>
+                </div>
+
+                <div
+                    class="flex flex-col md:flex-row border-b border-slate-200 items-stretch hover:bg-slate-50 transition">
+                    <div class="w-full md:w-3/4 p-4 flex items-center">
+                        <input type="checkbox" class="checkbox-custom mr-4">
+                        <span class="task-text font-bold text-lg text-slate-700">產出首波產品宣傳 Landing Page 素材</span>
+                    </div>
+                    <div
+                        class="w-full md:w-1/4 p-4 flex items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 bg-white">
+                        <div class="avatar-badge avatar-c mr-1">C</div> Charlie
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-stretch hover:bg-slate-50 transition">
+                    <div class="w-full md:w-3/4 p-4 flex items-center">
+                        <input type="checkbox" class="checkbox-custom mr-4">
+                        <span class="task-text font-bold text-lg text-slate-700">搞定法務與使用者服務條款 (Terms of Service)</span>
+                    </div>
+                    <div
+                        class="w-full md:w-1/4 p-4 flex items-center justify-center border-t md:border-t-0 md:border-l border-slate-200 bg-white">
+                        <div class="avatar-badge avatar-a mr-1">A</div> Alice
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Weekly Focus -->
+            <h3 class="font-bold text-xl text-slate-800 mb-4 flex items-center">
+                <i class="fa-solid fa-street-view text-slate-500 mr-2"></i>成員本週焦點 (Member Focus)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Alice's Column -->
+                <div class="bg-white border border-red-200 rounded-lg shadow-sm">
+                    <div class="bg-red-50 p-3 border-b border-red-100 flex items-center rounded-t-lg">
+                        <div class="avatar-badge avatar-a mr-2">A</div>
+                        <span class="font-bold text-red-900">Alice 的一週承諾</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">法務條款確認</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm"> Wireframe 設計</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">訪談 3 位用戶</span></label>
+                        <input type="text" class="planner-input text-sm" placeholder="新增...">
+                    </div>
+                </div>
+
+                <!-- Bob's Column -->
+                <div class="bg-white border border-blue-200 rounded-lg shadow-sm">
+                    <div class="bg-blue-50 p-3 border-b border-blue-100 flex items-center rounded-t-lg">
+                        <div class="avatar-badge avatar-b mr-2">B</div>
+                        <span class="font-bold text-blue-900">Bob 的一週承諾</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">Beta版部署</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">串接 Firebase 登入</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">修復 Safari 跑版</span></label>
+                        <input type="text" class="planner-input text-sm" placeholder="新增...">
+                    </div>
+                </div>
+
+                <!-- Charlie's Column -->
+                <div class="bg-white border border-emerald-200 rounded-lg shadow-sm">
+                    <div class="bg-emerald-50 p-3 border-b border-emerald-100 flex items-center rounded-t-lg">
+                        <div class="avatar-badge avatar-c mr-2">C</div>
+                        <span class="font-bold text-emerald-900">Charlie 的一週承諾</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">Landing Page 素材</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">撰寫發布電子報</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-2"><span
+                                class="task-text text-sm">設定社群貼文排程</span></label>
+                        <input type="text" class="planner-input text-sm" placeholder="新增...">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             3. 每日對齊看板 (Daily Standup)
+             ========================================== -->
+        <section id="view-daily" class="w-full max-w-6xl hidden animate-fade-in pb-12">
+            <div class="mb-6 flex justify-between items-end border-b-2 border-slate-300 pb-4">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                        <span class="bg-emerald-500 text-white px-3 py-1 mr-2 text-2xl rounded">3</span>每日對齊看板
+                    </h2>
+                    <p class="text-slate-600 mt-2 text-sm">取代繁瑣的時程表。團隊每日早上花 5 分鐘同步：「我今天要做什麼？」以及「我卡在哪裡？」。</p>
+                </div>
+                <div
+                    class="text-lg font-bold text-slate-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200">
+                    <i class="fa-regular fa-calendar-check text-emerald-500 mr-2"></i>Today
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Doing Today Columns (3 Cols for members) -->
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Alice Today -->
+                    <div class="paper-sheet p-0 overflow-hidden flex flex-col">
+                        <div class="bg-red-500 p-3 flex items-center justify-between text-white">
+                            <div class="flex items-center">
+                                <div class="avatar-badge bg-white text-red-500 mr-2">A</div> Alice
+                            </div>
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="p-4 flex-1 bg-white">
+                            <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">今日焦點 (Doing)
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span
+                                        class="task-text text-sm font-bold text-slate-800">完成法務條款草稿</span></label>
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span class="task-text text-sm">下午 2:00
+                                        訪談用戶</span></label>
+                                <input type="text" class="planner-input text-sm mt-2" placeholder="新增...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bob Today -->
+                    <div class="paper-sheet p-0 overflow-hidden flex flex-col">
+                        <div class="bg-blue-500 p-3 flex items-center justify-between text-white">
+                            <div class="flex items-center">
+                                <div class="avatar-badge bg-white text-blue-500 mr-2">B</div> Bob
+                            </div>
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="p-4 flex-1 bg-white">
+                            <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">今日焦點 (Doing)
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span
+                                        class="task-text text-sm font-bold text-slate-800">測試環境 Firebase
+                                        串接</span></label>
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span class="task-text text-sm">Code Review
+                                        (3 PRs)</span></label>
+                                <input type="text" class="planner-input text-sm mt-2" placeholder="新增...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charlie Today -->
+                    <div class="paper-sheet p-0 overflow-hidden flex flex-col">
+                        <div class="bg-emerald-500 p-3 flex items-center justify-between text-white">
+                            <div class="flex items-center">
+                                <div class="avatar-badge bg-white text-emerald-500 mr-2">C</div> Charlie
+                            </div>
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="p-4 flex-1 bg-white">
+                            <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">今日焦點 (Doing)
+                            </div>
+                            <div class="space-y-3">
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span
+                                        class="task-text text-sm font-bold text-slate-800">產出 3 張宣傳圖
+                                        (給Alice審)</span></label>
+                                <label class="flex items-start"><input type="checkbox"
+                                        class="checkbox-custom mt-0.5 mr-2"><span class="task-text text-sm">排定 Facebook
+                                        貼文</span></label>
+                                <input type="text" class="planner-input text-sm mt-2" placeholder="新增...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blockers & Notices Column -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <!-- Blockers -->
+                    <div class="bg-amber-50 rounded-xl border-2 border-amber-300 p-4 shadow-sm flex-1">
+                        <h3 class="font-bold text-amber-900 mb-3 flex items-center border-b border-amber-200 pb-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>阻礙與求救 (Blockers)
+                        </h3>
+                        <p class="text-xs text-amber-700 mb-3">任何卡住你的事情寫在這裡，團隊一起解決。</p>
+                        <div class="space-y-3">
+                            <div class="bg-white p-2 rounded border border-amber-200 text-sm shadow-sm relative">
+                                <div class="avatar-badge avatar-b absolute -top-2 -right-2 transform scale-75">B</div>
+                                "Firebase 的 API Key 權限似乎有問題，Alice 可以幫忙看帳號嗎？"
+                            </div>
+                            <input type="text" class="planner-input text-sm" placeholder="遇到什麼困難？">
+                        </div>
+                    </div>
+
+                    <!-- Team Announcements -->
+                    <div class="bg-slate-800 rounded-xl p-4 text-white shadow-sm">
+                        <h3 class="font-bold text-indigo-300 mb-2 flex items-center border-b border-slate-600 pb-2">
+                            <i class="fa-solid fa-bullhorn mr-2"></i>團隊廣播
+                        </h3>
+                        <ul class="text-sm space-y-2 mt-3 text-slate-300">
+                            <li><i class="fa-solid fa-circle text-[8px] mr-2 text-indigo-400"></i>下午 3:00 全體進度同步會議。</li>
+                            <li><i class="fa-solid fa-circle text-[8px] mr-2 text-indigo-400"></i>本週五記得填寫報帳單！</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        // --- Tab Switching Logic ---
+        function switchTab(tabId) {
+            const tabs = ['vision', 'master', 'weekly', 'daily'];
+
+            tabs.forEach(id => {
+                document.getElementById('view-' + id).classList.add('hidden');
+                const btn = document.getElementById('tab-' + id);
+                if (btn) {
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                    btn.classList.add('hover:bg-slate-800', 'text-slate-300');
+                }
+            });
+
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+
+            const activeBtn = document.getElementById('tab-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+            }
+
+            const mobileSelect = document.querySelector('select');
+            if (mobileSelect.value !== tabId) {
+                mobileSelect.value = tabId;
+            }
+        }
+
+        // --- Checkbox Strike-through Logic ---
+        function initCheckboxes() {
+            document.querySelectorAll('.checkbox-custom').forEach(box => {
+                box.removeEventListener('change', handleCheck);
+                box.addEventListener('change', handleCheck);
+            });
+        }
+
+        function handleCheck() {
+            let textSpan = this.nextElementSibling;
+            if (textSpan && textSpan.classList.contains('task-text')) {
+                if (this.checked) {
+                    textSpan.classList.add('task-completed');
+                } else {
+                    textSpan.classList.remove('task-completed');
+                }
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCheckboxes();
+        });
+
+    </script>
+</body>
+
+</html>

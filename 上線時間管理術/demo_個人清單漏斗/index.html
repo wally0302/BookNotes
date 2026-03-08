@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上線時間管理術 - 終極數位系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #e2e8f0;
+            /* 更像桌面的底色 */
+        }
+
+        /* 模擬紙張質感的設計 */
+        .paper-sheet {
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .paper-sheet::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-width: 0 30px 30px 0;
+            border-style: solid;
+            border-color: #e2e8f0 #e2e8f0 #ffffff #ffffff;
+            /* 摺角效果 */
+            box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 輸入框與底線設計 */
+        .planner-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 4px 0;
+            outline: none;
+            color: #1e293b;
+            transition: border-color 0.2s;
+        }
+
+        .planner-input:focus {
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        /* 自訂 Checkbox - 帶來手寫打勾的快感 */
+        .checkbox-custom {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.15em;
+            height: 1.15em;
+            border: 2px solid #64748b;
+            border-radius: 0.15em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .checkbox-custom::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #334155;
+            background-color: #334155;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        .checkbox-custom:checked::before {
+            transform: scale(1);
+        }
+
+        .checkbox-custom:checked {
+            border-color: #334155;
+        }
+
+        /* 項目完成後的劃線效果 */
+        .task-text {
+            transition: all 0.3s ease;
+        }
+
+        .task-completed {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        /* 清單邊框風格 - 忠於原著的黑色粗線條 */
+        .book-border {
+            border: 2px solid #1e293b;
+        }
+
+        .book-border-b {
+            border-bottom: 2px solid #1e293b;
+        }
+
+        /* 側邊欄捲軸 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex shrink-0 z-20 shadow-xl">
+        <div class="p-6 border-b border-slate-700 bg-slate-950">
+            <h1 class="text-xl font-bold tracking-wider leading-relaxed text-white">
+                <i class="fa-solid fa-hourglass-half mr-2 text-blue-500"></i>上線時間管理
+            </h1>
+            <p class="text-xs text-slate-400 mt-2 font-light">端到端 (End-to-End) 系統</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <!-- 系統運作核心 -->
+            <div class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2 mb-3 pl-2">系統大腦</div>
+            <button onclick="switchTab('guide')" id="tab-guide"
+                class="w-full text-left px-4 py-3 rounded-md flex items-center bg-blue-600 text-white transition-all shadow-md">
+                <i class="fa-solid fa-sitemap w-6 text-center"></i> 系統運作指南
+            </button>
+
+            <!-- 資訊入口 -->
+            <div
+                class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-6 mb-3 pl-2 flex items-center justify-between">
+                <span>資訊入口 (大腦卸載)</span>
+                <i class="fa-solid fa-arrow-down text-slate-600"></i>
+            </div>
+            <button onclick="switchTab('capture')" id="tab-capture"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-inbox w-6 text-center text-amber-400"></i> 0. 採集與附屬清單
+            </button>
+            <button onclick="switchTab('master')" id="tab-master"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-database w-6 text-center text-slate-400"></i> 1. 首要清單 (Master)
+            </button>
+
+            <!-- 執行漏斗 -->
+            <div
+                class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-6 mb-3 pl-2 flex items-center justify-between">
+                <span>執行漏斗 (時間規劃)</span>
+                <i class="fa-solid fa-filter text-slate-600"></i>
+            </div>
+            <button onclick="switchTab('weekly')" id="tab-weekly"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-calendar-week w-6 text-center text-blue-400"></i> 2. 一週清單 (Weekly)
+            </button>
+            <button onclick="switchTab('daily')" id="tab-daily"
+                class="w-full text-left px-4 py-2.5 rounded-md flex items-center hover:bg-slate-800 text-slate-300 transition-colors">
+                <i class="fa-solid fa-calendar-day w-6 text-center text-emerald-400"></i> 3. 一日清單 (Daily)
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div
+        class="md:hidden fixed top-0 w-full bg-slate-900 text-white p-4 flex justify-between items-center z-50 shadow-md">
+        <h1 class="text-lg font-bold"><i class="fa-solid fa-hourglass-half text-blue-400 mr-2"></i>時間管理系統</h1>
+        <select onchange="switchTab(this.value)"
+            class="bg-slate-800 text-white border border-slate-700 p-2 rounded text-sm outline-none">
+            <option value="guide">系統運作指南</option>
+            <option value="capture">0. 採集與附屬清單</option>
+            <option value="master">1. 首要清單 (Master)</option>
+            <option value="weekly">2. 一週清單 (Weekly)</option>
+            <option value="daily">3. 一日清單 (Daily)</option>
+        </select>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto mt-16 md:mt-0 p-4 md:p-8 relative w-full flex justify-center">
+
+        <!-- ==========================================
+             0. 系統運作指南 (System Guide & Workflow) 
+             ========================================== -->
+        <section id="view-guide" class="w-full max-w-4xl block animate-fade-in pb-10">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-black text-slate-800 mb-4 tracking-wide">清單漏斗工作流程</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto">
+                    「確立標準工作流程便能信任自己會定期檢視各清單，就免於承受『各種期限』造成的壓力。」
+                </p>
+            </div>
+
+            <!-- Workflow Graphic based on Page 073 (Flowchart Version) -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden mb-12">
+                <div class="bg-slate-800 text-white p-4 text-center">
+                    <div class="font-bold text-lg">大腦卸載路徑</div>
+                    <div class="text-slate-300 text-sm mt-1">
+                        靈感閃現 ➔ 寫進<span class="text-amber-400 font-bold mx-1">採集清單</span> ➔ 定期整理至<span
+                            class="text-blue-300 font-bold mx-1">首要清單</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row">
+                    <!-- The Big Sunday Review Flowchart -->
+                    <div class="w-full md:w-1/2 bg-blue-50 p-6 border-b md:border-b-0 md:border-r border-slate-200">
+                        <div class="flex items-center justify-center flex-col mb-6">
+                            <i class="fa-solid fa-moon text-5xl text-blue-500 mb-2"></i>
+                            <h3 class="text-2xl font-bold text-slate-800">週日 / 週一早晨</h3>
+                            <span
+                                class="text-sm font-bold bg-blue-200 text-blue-800 px-3 py-1 rounded-full mt-2">每週大保養流程</span>
+                        </div>
+
+                        <!-- Flowchart Steps -->
+                        <div class="flex flex-col items-center">
+                            <!-- Step 1 -->
+                            <div
+                                class="w-full bg-white border-2 border-blue-200 rounded-lg p-3 shadow-sm flex items-center relative z-10 hover:scale-105 transition-transform">
+                                <div
+                                    class="bg-blue-500 text-white w-6 h-6 rounded-full flex justify-center items-center text-sm font-bold mr-3 shrink-0">
+                                    1</div>
+                                <div class="text-sm text-slate-700 font-medium leading-snug"><span
+                                        class="font-bold text-slate-900">更新首要清單：</span>畫掉已完成的事，並將採集清單的新想法排入。</div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="h-6 w-0.5 bg-blue-300"></div>
+                            <div
+                                class="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-blue-300 mb-1">
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div
+                                class="w-full bg-white border-2 border-blue-200 rounded-lg p-3 shadow-sm flex items-center relative z-10 hover:scale-105 transition-transform">
+                                <div
+                                    class="bg-blue-500 text-white w-6 h-6 rounded-full flex justify-center items-center text-sm font-bold mr-3 shrink-0">
+                                    2</div>
+                                <div class="text-sm text-slate-700 font-medium leading-snug"><span
+                                        class="font-bold text-slate-900">製作一週清單：</span>參考首要清單，把本週要做的特定事務挑出。</div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="h-6 w-0.5 bg-blue-300"></div>
+                            <div
+                                class="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-blue-300 mb-1">
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div
+                                class="w-full bg-white border-2 border-blue-200 rounded-lg p-3 shadow-sm flex items-center relative z-10 hover:scale-105 transition-transform">
+                                <div
+                                    class="bg-blue-500 text-white w-6 h-6 rounded-full flex justify-center items-center text-sm font-bold mr-3 shrink-0">
+                                    3</div>
+                                <div class="text-sm text-slate-700 font-medium leading-snug"><span
+                                        class="font-bold text-slate-900">擬定一日清單：</span>分配週一的逐小時工作計畫與最優先事項。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Evening Review Flowchart -->
+                    <div class="w-full md:w-1/2 bg-white p-6">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
+                            <div class="text-center"><i class="fa-solid fa-cloud-moon text-2xl text-slate-600"></i>
+                                <div class="font-bold mt-1 text-sm">週一</div>
+                            </div>
+                            <div class="text-center"><i class="fa-solid fa-cloud-moon text-2xl text-slate-600"></i>
+                                <div class="font-bold mt-1 text-sm">週二</div>
+                            </div>
+                            <div class="text-center"><i class="fa-solid fa-cloud-moon text-2xl text-slate-600"></i>
+                                <div class="font-bold mt-1 text-sm">週三</div>
+                            </div>
+                            <div class="text-center"><i class="fa-solid fa-cloud-moon text-2xl text-slate-600"></i>
+                                <div class="font-bold mt-1 text-sm">週四</div>
+                            </div>
+                            <div class="text-center"><i class="fa-solid fa-cloud-moon text-2xl text-slate-600"></i>
+                                <div class="font-bold mt-1 text-sm">週五</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center flex-col mb-6">
+                            <h3 class="text-xl font-bold text-slate-800">每晚 5 分鐘檢視</h3>
+                            <span
+                                class="text-sm font-bold bg-slate-200 text-slate-700 px-3 py-1 rounded-full mt-2">每日微調流程</span>
+                        </div>
+
+                        <!-- Flowchart Steps -->
+                        <div class="flex flex-col items-center">
+                            <!-- Step 1 -->
+                            <div
+                                class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 shadow-sm flex items-center relative z-10 hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-eraser text-slate-500 text-lg mr-3 w-5 text-center shrink-0"></i>
+                                <div class="text-sm text-slate-700 font-medium leading-snug">刪除當日已完結的事情，更新「一週清單」進度。
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="h-6 w-0.5 bg-slate-300"></div>
+                            <div
+                                class="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-300 mb-1">
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div
+                                class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 shadow-sm flex items-center relative z-10 hover:scale-105 transition-transform">
+                                <i
+                                    class="fa-solid fa-calendar-plus text-slate-500 text-lg mr-3 w-5 text-center shrink-0"></i>
+                                <div class="text-sm text-slate-700 font-medium leading-snug">參考一週清單，把未完或新任務排入「隔天的一日清單」。
+                                </div>
+                            </div>
+
+                            <!-- Optional Loop / Side task -->
+                            <div class="mt-6 w-full border-t border-dashed border-slate-300 pt-5 relative">
+                                <div
+                                    class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-xs text-slate-400 font-bold tracking-widest uppercase">
+                                    隨機循環</div>
+                                <div
+                                    class="w-full bg-amber-50 border border-amber-200 rounded-lg p-3 shadow-sm flex items-center hover:scale-105 transition-transform">
+                                    <i class="fa-solid fa-eye text-amber-500 text-lg mr-3 w-5 text-center shrink-0"></i>
+                                    <div class="text-sm text-slate-700 font-medium leading-snug">
+                                        一週內隨機查看「採集清單」2~3次，確保靈感不遺漏。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- After Class Practice (Page 074) -->
+            <div class="bg-white border-2 border-indigo-900 rounded-lg shadow-md max-w-2xl mx-auto overflow-hidden">
+                <div class="bg-indigo-50 border-b-2 border-indigo-900 p-4 text-center">
+                    <h3 class="font-black text-lg text-indigo-900 tracking-wider">上線時間課後小練習</h3>
+                </div>
+                <div class="p-6">
+                    <ul class="space-y-4 text-slate-700 text-sm font-medium">
+                        <li class="flex items-start">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3 shrink-0">
+                            <span class="task-text leading-relaxed">清理大腦並擬定當前的<strong>首要清單</strong>。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3 shrink-0">
+                            <span
+                                class="task-text leading-relaxed">借助<strong>一週清單</strong>和<strong>一日清單</strong>來運用一週的時間。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3 shrink-0">
+                            <span class="task-text leading-relaxed">在手機裡增添一個<strong>採集清單</strong>（藉由 Apple Notes 或
+                                Google Keep 等功能）以捕捉還不在清單上的任何點子或是腦海中的開放迴圈。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <input type="checkbox" class="checkbox-custom mt-0.5 mr-3 shrink-0">
+                            <span
+                                class="task-text leading-relaxed">增加一個<strong>購物清單</strong>到手機中，以便在廚房弄髒雙手時，運用智慧家庭裝置的語音聽寫功能加以存取。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center text-slate-500 text-sm mt-8">
+                <i class="fa-solid fa-arrow-right-long mr-2"></i> 準備好了嗎？從左側選單進入「0. 採集與附屬清單」開始清理大腦！
+            </div>
+        </section>
+
+        <!-- ==========================================
+             0. 採集與附屬清單 (Capture & Others)
+             ========================================== -->
+        <section id="view-capture" class="w-full max-w-6xl hidden animate-fade-in pb-10">
+            <div class="mb-8">
+                <h2 class="text-3xl font-black text-slate-800">
+                    <i class="fa-solid fa-inbox text-amber-500 mr-2"></i>資訊入口與緩衝區
+                </h2>
+                <p class="text-slate-500 mt-2">大腦是用來思考的。把迎面而來的事情停在這裡，週末再統一歸類到首要清單。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Capture List -->
+                <div class="bg-amber-50 rounded-xl border border-amber-200 shadow-sm flex flex-col h-[500px]">
+                    <div
+                        class="p-4 bg-amber-100 border-b border-amber-200 flex justify-between items-center rounded-t-xl">
+                        <h3 class="font-bold text-amber-900"><i class="fa-solid fa-bolt mr-2"></i>採集清單 (Capture)</h3>
+                        <span class="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded">隨時記錄</span>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <!-- Quick Input -->
+                        <div class="flex bg-white rounded border border-amber-300 p-1 mb-4 shadow-inner">
+                            <input type="text" id="capture-input" class="flex-1 px-3 outline-none text-sm"
+                                placeholder="腦中閃過什麼念頭？">
+                            <button class="px-3 text-amber-500 hover:text-amber-700 transition" title="語音輸入"><i
+                                    class="fa-solid fa-microphone"></i></button>
+                            <button onclick="addCaptureTask()"
+                                class="px-3 text-blue-500 hover:text-blue-700 transition"><i
+                                    class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <!-- List -->
+                        <ul id="capture-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                            <li class="flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span
+                                    class="task-text text-sm flex-1">致電茱麗葉的學校幫她請假</span></li>
+                            <li class="flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span class="task-text text-sm flex-1">就景觀美化事宜發
+                                    email 給房東</span></li>
+                            <li class="flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span
+                                    class="task-text text-sm flex-1">購買門廊用的燈泡</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Shopping List (Based on Pg 071 recommendations) -->
+                <div class="bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm flex flex-col h-[500px]">
+                    <div
+                        class="p-4 bg-emerald-100 border-b border-emerald-200 flex justify-between items-center rounded-t-xl">
+                        <h3 class="font-bold text-emerald-900"><i class="fa-solid fa-basket-shopping mr-2"></i>購物清單
+                            (Shopping)</h3>
+                        <span class="text-xs bg-emerald-200 text-emerald-800 px-2 py-1 rounded">按區域分類</span>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto">
+                        <p class="text-xs text-emerald-700 mb-3 italic">與家人同步，購物時迅速採買。</p>
+
+                        <div class="mb-4">
+                            <div class="text-xs font-bold text-emerald-800 border-b border-emerald-300 mb-2 pb-1">農產品 /
+                                乳製品</div>
+                            <div class="space-y-2">
+                                <label class="flex items-center"><input type="checkbox"
+                                        class="checkbox-custom mr-3"><span class="task-text text-sm">雞蛋
+                                        (語音加入)</span></label>
+                                <label class="flex items-center"><input type="checkbox"
+                                        class="checkbox-custom mr-3"><span class="task-text text-sm">蘋果</span></label>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="text-xs font-bold text-emerald-800 border-b border-emerald-300 mb-2 pb-1">肉品 /
+                                冷凍食品</div>
+                            <div class="space-y-2">
+                                <label class="flex items-center"><input type="checkbox"
+                                        class="checkbox-custom mr-3"><span
+                                        class="task-text text-sm">冷凍花椰菜</span></label>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <div class="text-xs font-bold text-emerald-800 border-b border-emerald-300 mb-2 pb-1">日用品 /
+                                其他</div>
+                            <div class="space-y-2">
+                                <label class="flex items-center"><i
+                                        class="fa-solid fa-plus text-emerald-400 mr-3 text-sm ml-1"></i><input
+                                        type="text" class="planner-input text-sm" placeholder="新增物品..."></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Someday List -->
+                <div class="bg-purple-50 rounded-xl border border-purple-200 shadow-sm flex flex-col h-[500px]">
+                    <div
+                        class="p-4 bg-purple-100 border-b border-purple-200 flex justify-between items-center rounded-t-xl">
+                        <h3 class="font-bold text-purple-900"><i class="fa-solid fa-star mr-2"></i>收藏清單 (Someday)</h3>
+                        <span class="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">每月檢視</span>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto space-y-5">
+                        <div>
+                            <div class="text-sm font-bold text-purple-800 flex items-center mb-2"><i
+                                    class="fa-solid fa-book w-5"></i> 想讀的書</div>
+                            <ul class="space-y-2 pl-5 text-sm">
+                                <li>- 《想成功，先吃了那隻青蛙》</li>
+                                <li>- 《上線時間管理術》</li>
+                                <li><input type="text" class="planner-input text-sm text-purple-600"
+                                        placeholder="+ 新增書單..."></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-purple-800 flex items-center mb-2"><i
+                                    class="fa-solid fa-plane w-5"></i> 想去旅行的地方</div>
+                            <ul class="space-y-2 pl-5 text-sm">
+                                <li>- 日本京都賞楓</li>
+                                <li><input type="text" class="planner-input text-sm text-purple-600"
+                                        placeholder="+ 新增地點..."></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             1. 首要清單 (Master List)
+             ========================================== -->
+        <section id="view-master" class="w-full max-w-5xl hidden animate-fade-in pb-12">
+            <div class="mb-8 flex justify-between items-end border-b-2 border-slate-800 pb-2">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                        <span class="bg-slate-800 text-white px-3 py-1 mr-2 text-2xl">1</span>首要清單
+                    </h2>
+                    <p class="text-slate-600 mt-2 text-sm">儀表板分類法：將「工作」與「生活」的一切依精力/行動型態歸類。完成專案前，請勿隨意劃掉。</p>
+                </div>
+            </div>
+
+            <!-- Mimicking the book layout (Page 062) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 book-border p-6 bg-white shadow-md relative">
+                <!-- Page styling -->
+                <div class="absolute top-0 right-0 w-16 h-16 border-l-2 border-b-2 border-slate-800"
+                    style="border-bottom-left-radius: 100%; background: #f8fafc;"></div>
+                <div class="absolute top-2 left-6 text-2xl font-black tracking-widest text-slate-200 z-0 select-none">
+                    MASTER LIST</div>
+
+                <!-- Category 1 -->
+                <div class="z-10">
+                    <div class="font-bold text-lg border-b-2 border-slate-800 pb-1 mb-3 flex items-center">
+                        電腦——工作 <i class="fa-solid fa-laptop text-slate-400 ml-auto"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start group"><input type="checkbox"
+                                class="checkbox-custom mt-0.5 mr-3"><span class="task-text">開辦email訓練課程
+                                (預計10月2日)</span></label>
+                        <label class="flex items-start group"><input type="checkbox"
+                                class="checkbox-custom mt-0.5 mr-3"><span class="task-text">完成專案提案</span></label>
+                        <label class="flex items-start group"><input type="checkbox"
+                                class="checkbox-custom mt-0.5 mr-3"><span class="task-text">安排與馬揚開會</span></label>
+                        <label class="flex items-start group"><input type="checkbox"
+                                class="checkbox-custom mt-0.5 mr-3"><span class="task-text">草擬電子報
+                                (預定8月30日發布)</span></label>
+                        <label class="flex items-center"><i
+                                class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                                class="planner-input text-sm" placeholder=""></label>
+                    </div>
+                </div>
+
+                <!-- Category 2 -->
+                <div class="z-10">
+                    <div class="font-bold text-lg border-b-2 border-slate-800 pb-1 mb-3 flex items-center">
+                        電腦——私事 <i class="fa-solid fa-house-laptop text-slate-400 ml-auto"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">幫小孩登記夏令營</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">為沙維耶的生日派對製作email邀請函</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">完成寫書任務 (預計12月8日)</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">為老媽設計相簿</span></label>
+                        <label class="flex items-center"><i
+                                class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                                class="planner-input text-sm" placeholder=""></label>
+                    </div>
+                </div>
+
+                <!-- Category 3 -->
+                <div class="z-10 pt-4">
+                    <div class="font-bold text-lg border-b-2 border-slate-800 pb-1 mb-3 flex items-center">
+                        電話聯繫 <i class="fa-solid fa-phone text-slate-400 ml-auto"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">致電泳訓學校安排時程</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">聯絡希拉的校長討論註冊事宜</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">致電保險公司處理牙醫帳單</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">找人修理壞掉的圍籬</span></label>
+                        <label class="flex items-center"><i
+                                class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                                class="planner-input text-sm" placeholder=""></label>
+                    </div>
+                </div>
+
+                <!-- Category 4 -->
+                <div class="z-10 pt-4">
+                    <div class="font-bold text-lg border-b-2 border-slate-800 pb-1 mb-3 flex items-center">
+                        家務 <i class="fa-solid fa-broom text-slate-400 ml-auto"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">整理孩子們的冬季衣物</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">為旅行備好海灘用品</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">修理紗門</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">學鋼琴</span></label>
+                        <label class="flex items-center"><i
+                                class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                                class="planner-input text-sm" placeholder=""></label>
+                    </div>
+                </div>
+
+                <!-- Category 5 -->
+                <div class="z-10 pt-4">
+                    <div class="font-bold text-lg border-b-2 border-slate-800 pb-1 mb-3 flex items-center">
+                        雜務 <i class="fa-solid fa-list-check text-slate-400 ml-auto"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">退還泳衣 (至遲8月12日)</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">汽車檢修 (最晚11月1日)</span></label>
+                        <label class="flex items-start"><input type="checkbox" class="checkbox-custom mt-0.5 mr-3"><span
+                                class="task-text">領取沖洗好的照片</span></label>
+                        <label class="flex items-center"><i
+                                class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                                class="planner-input text-sm" placeholder=""></label>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==========================================
+             2. 一週清單 (Weekly List)
+             ========================================== -->
+        <section id="view-weekly" class="w-full max-w-5xl hidden animate-fade-in pb-12">
+            <div class="mb-6 flex justify-between items-end">
+                <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                    <span class="bg-blue-600 text-white px-3 py-1 mr-2 text-2xl">2</span>一週清單
+                </h2>
+            </div>
+
+            <!-- Faithful recreation of Page 066 layout -->
+            <div class="paper-sheet p-6 md:p-10 book-border bg-[#fdfdfd]">
+
+                <!-- Top Section: Priorities -->
+                <div class="flex border-b-2 border-slate-800">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 font-bold bg-slate-100">本週三大優先事項</div>
+                    <div class="w-1/3 p-2 font-bold bg-slate-100 text-center">計畫執行時段</div>
+                </div>
+                <!-- Rows -->
+                <div class="flex border-b border-slate-400 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">完成專案提案——2小時</span></div>
+                    <div class="w-1/3 p-3 flex items-center justify-center text-slate-600">日期 週二早上</div>
+                </div>
+                <div class="flex border-b border-slate-400 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">幫小孩登記夏令營——60分鐘</span></div>
+                    <div class="w-1/3 p-3 flex items-center justify-center text-slate-600">日期 週三傍晚</div>
+                </div>
+                <div class="flex border-b-2 border-slate-800 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">為經理草擬電子報——30分鐘</span></div>
+                    <div class="w-1/3 p-3 flex items-center justify-center text-slate-600">日期 週四早上</div>
+                </div>
+
+                <!-- Middle Section: Other tasks -->
+                <div class="flex border-b-2 border-slate-800 mt-6">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 font-bold bg-slate-100">本週能做的其他事情</div>
+                    <div class="w-1/3 p-2 font-bold bg-slate-100 text-center">計畫執行時段</div>
+                </div>
+                <!-- Rows -->
+                <div class="flex border-b border-slate-300 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 px-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">到大賣場退還泳裝</span></div>
+                    <div class="w-1/3 p-2 px-3 flex items-center justify-center text-slate-600">日期 週五下午</div>
+                </div>
+                <div class="flex border-b border-slate-300 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 px-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">整理孩子們的冬季衣物</span></div>
+                    <div class="w-1/3 p-2 px-3 flex items-center justify-center text-slate-600">日期 週二傍晚</div>
+                </div>
+                <div class="flex border-b border-slate-300 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 px-3 flex items-center"><input type="checkbox"
+                            class="checkbox-custom mr-3"><span class="task-text">與老媽視訊聊天</span></div>
+                    <div class="w-1/3 p-2 px-3 flex items-center justify-center text-slate-600">日期 週五早上</div>
+                </div>
+                <div class="flex border-b-2 border-slate-800 items-stretch">
+                    <div class="w-2/3 border-r-2 border-slate-800 p-2 px-3 flex items-center"><i
+                            class="fa-solid fa-plus text-slate-300 mr-3 text-sm ml-1"></i><input type="text"
+                            class="planner-input text-sm"></div>
+                    <div class="w-1/3 p-2 px-3 flex items-center justify-center text-slate-600">日期 <input type="text"
+                            class="planner-input text-sm w-16 ml-2 text-center"></div>
+                </div>
+
+                <!-- Bottom Grid: Themes, Habits, Follow-up -->
+                <div class="grid grid-cols-1 md:grid-cols-3 mt-6 book-border">
+                    <!-- Themes -->
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800">
+                        <div class="p-2 font-bold bg-slate-100 border-b-2 border-slate-800 text-center">每日主題</div>
+                        <div class="p-3 text-sm space-y-2">
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週日</span>準備日用品和食材</div>
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週一</span>工作規畫 / 洗衣服</div>
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週二</span>輔導課程 / 家務</div>
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週三</span>專案 / 處理私事</div>
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週四</span>行政工作 / 整理庭院</div>
+                            <div class="border-b border-slate-200 pb-1"><span
+                                    class="inline-block w-10 font-bold">週五</span>email與後續追蹤</div>
+                            <div><span class="inline-block w-10 font-bold">週六</span>休閒娛樂</div>
+                        </div>
+                    </div>
+
+                    <!-- Habits -->
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800">
+                        <div class="p-2 font-bold bg-slate-100 border-b-2 border-slate-800 text-center">追蹤各項習慣</div>
+                        <div class="p-4 space-y-4">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                <span>冥想</span>
+                                <div class="flex gap-1 text-slate-300 text-lg">
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                <span>健身</span>
+                                <div class="flex gap-1 text-slate-300 text-lg">
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>走進大自然</span>
+                                <div class="flex gap-1 text-slate-300 text-lg">
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                    <i class="fa-regular fa-circle cursor-pointer hover:text-slate-500"
+                                        onclick="this.classList.toggle('fa-solid')"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Follow up -->
+                    <div>
+                        <div class="p-2 font-bold bg-slate-100 border-b-2 border-slate-800 text-center">追蹤</div>
+                        <div class="p-4 space-y-3">
+                            <div class="border-b border-slate-300 pb-1 text-sm">下週必須思考的事情</div>
+                            <div class="border-b border-slate-300 pb-1 text-sm">下週的委員會議</div>
+                            <div><input type="text" class="planner-input text-sm"></div>
+                            <div><input type="text" class="planner-input text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==========================================
+             3. 一日清單 (Daily List)
+             ========================================== -->
+        <section id="view-daily" class="w-full max-w-5xl hidden animate-fade-in pb-12">
+            <div class="mb-6 flex justify-between items-end">
+                <h2 class="text-3xl font-black text-slate-800 tracking-wide">
+                    <span class="bg-emerald-500 text-white px-3 py-1 mr-2 text-2xl">3</span>一日清單
+                </h2>
+            </div>
+
+            <!-- Faithful recreation of Page 068 layout -->
+            <div class="paper-sheet p-6 md:p-10 book-border bg-[#fdfdfd]">
+
+                <!-- Top Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 book-border mb-6">
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800">
+                        <div class="bg-slate-100 p-2 font-bold book-border-b">最優先事項</div>
+                        <div class="p-3 h-20 flex flex-col justify-end">
+                            <input type="text" class="w-full text-lg font-bold border-none outline-none bg-transparent"
+                                value="完成專案提案！">
+                            <div class="border-b border-slate-400 mt-1"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="bg-slate-100 p-2 font-bold book-border-b">今日感激的事：</div>
+                        <div class="p-3 h-20 flex flex-col justify-end">
+                            <input type="text" class="w-full text-lg border-none outline-none bg-transparent"
+                                value="妹妹陪我共享晚餐！">
+                            <div class="border-b border-slate-400 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Row: Priorities vs Hourly Plan -->
+                <div class="grid grid-cols-1 md:grid-cols-2 book-border mb-6">
+
+                    <!-- Left: Other Priorities -->
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800 flex flex-col">
+                        <div class="bg-slate-100 p-2 font-bold book-border-b">其他優先事項：</div>
+                        <div class="flex-1">
+                            <div class="p-3 border-b border-slate-300 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span class="task-text">就2025年度預算回應巴芙娜</span>
+                            </div>
+                            <div class="p-3 border-b border-slate-300 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span class="task-text">整理孩子們的冬季衣物</span></div>
+                            <div class="p-3 border-b border-slate-300 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><span class="task-text">策畫下週的輔導課程</span></div>
+                            <div class="p-3 border-b border-slate-300 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><input type="text"
+                                    class="planner-input text-sm"></div>
+                            <div class="p-3 border-b border-slate-300 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><input type="text"
+                                    class="planner-input text-sm"></div>
+                            <div class="p-3 flex items-start"><input type="checkbox"
+                                    class="checkbox-custom mt-0.5 mr-3"><input type="text"
+                                    class="planner-input text-sm"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Hourly Plan -->
+                    <div>
+                        <div class="bg-slate-100 p-2 font-bold book-border-b flex justify-between items-center">
+                            每小時計畫 <i class="fa-regular fa-clock text-slate-600 text-lg"></i>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">7am</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent" value="準備早餐">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">8am</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="送小孩上學 / 處理email">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">9am</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent" value="完成專案提案">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">10am
+                                </div><input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="完成專案提案">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">11am
+                                </div><input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="回覆email和檢視輔導課程申請表">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">12pm
+                                </div><input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="吃午餐與散步">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">1pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent" value="開會">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">2pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent" value="開會">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">3pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="送交2025年度預算給巴芙娜 / 閱讀email">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">4pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="開會 / 檢閱email">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">5pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="通勤返家 / 準備晚餐">
+                            </div>
+                            <div class="flex border-b border-slate-300">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">6pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="吃晚餐 / 陪小孩玩遊戲">
+                            </div>
+                            <div class="flex">
+                                <div class="w-16 py-1 px-2 border-r border-slate-300 text-slate-600 font-bold">7pm</div>
+                                <input type="text" class="flex-1 px-3 py-1 outline-none bg-transparent"
+                                    value="整理孩子的冬季衣物">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Chores, Mindfulness, Tomorrow -->
+                <div class="grid grid-cols-1 md:grid-cols-3 book-border">
+                    <!-- Chores -->
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800">
+                        <div class="bg-slate-100 p-2 font-bold book-border-b">雜務</div>
+                        <div class="p-3 space-y-3">
+                            <div class="border-b border-slate-300 pb-1 text-sm">訂購狗糧</div>
+                            <div class="border-b border-slate-300 pb-1 text-sm">致電承包商討論油漆顏色</div>
+                            <div><input type="text" class="planner-input text-sm"></div>
+                            <div><input type="text" class="planner-input text-sm"></div>
+                        </div>
+                    </div>
+
+                    <!-- Mindfulness -->
+                    <div class="border-b-2 md:border-b-0 md:border-r-2 border-slate-800">
+                        <div class="bg-slate-100 p-2 font-bold book-border-b">正念時刻</div>
+                        <div class="p-3 space-y-3">
+                            <div class="flex justify-between items-center border-b border-slate-300 pb-1 text-sm">
+                                <span>工作時間關閉email</span>
+                                <i class="fa-solid fa-circle text-slate-800 cursor-pointer text-lg"></i>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-300 pb-1 text-sm">
+                                <span>靜觀30分鐘</span>
+                                <i class="fa-regular fa-circle text-slate-800 cursor-pointer text-lg"
+                                    onclick="toggleCircle(this)"></i>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-300 pb-1 text-sm">
+                                <span>走進大自然</span>
+                                <i class="fa-regular fa-circle text-slate-800 cursor-pointer text-lg"
+                                    onclick="toggleCircle(this)"></i>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-slate-300 pb-1 text-sm">
+                                <input type="text" class="outline-none bg-transparent w-full" placeholder="">
+                                <i class="fa-regular fa-circle text-slate-800 cursor-pointer text-lg"
+                                    onclick="toggleCircle(this)"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tomorrow -->
+                    <div>
+                        <div class="bg-slate-100 p-2 font-bold book-border-b text-center">明天的優先事項</div>
+                        <div class="p-3 space-y-3">
+                            <div class="border-b border-slate-300 pb-4"></div>
+                            <div class="border-b border-slate-300 pb-4"></div>
+                            <div class="border-b border-slate-300 pb-4"></div>
+                            <div class="border-b border-slate-300 pb-4"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script>
+        // --- Tab Switching Logic ---
+        function switchTab(tabId) {
+            const tabs = ['guide', 'capture', 'master', 'weekly', 'daily'];
+
+            // Hide all sections
+            tabs.forEach(id => {
+                document.getElementById('view-' + id).classList.add('hidden');
+
+                // Reset sidebar buttons
+                const btn = document.getElementById('tab-' + id);
+                if (btn) {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                    btn.classList.add('hover:bg-slate-800', 'text-slate-300');
+                }
+            });
+
+            // Show selected section
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+
+            // Highlight selected button
+            const activeBtn = document.getElementById('tab-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('hover:bg-slate-800', 'text-slate-300');
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            }
+
+            // Sync mobile select
+            const mobileSelect = document.querySelector('select');
+            if (mobileSelect.value !== tabId) {
+                mobileSelect.value = tabId;
+            }
+        }
+
+        // --- Interactive Features ---
+
+        // 1. Task Checkbox logic (Strikethrough effect)
+        function initCheckboxes() {
+            document.querySelectorAll('.checkbox-custom').forEach(box => {
+                // Prevent duplicate listener attachments
+                box.removeEventListener('change', handleCheck);
+                box.addEventListener('change', handleCheck);
+            });
+        }
+
+        function handleCheck() {
+            // Find the span right after the checkbox
+            let textSpan = this.nextElementSibling;
+            if (textSpan && textSpan.classList.contains('task-text')) {
+                if (this.checked) {
+                    textSpan.classList.add('task-completed');
+                } else {
+                    textSpan.classList.remove('task-completed');
+                }
+            }
+        }
+
+        // 2. Circle Toggle Logic (for Habits and Mindfulness)
+        function toggleCircle(element) {
+            if (element.classList.contains('fa-regular')) {
+                element.classList.remove('fa-regular');
+                element.classList.add('fa-solid');
+            } else {
+                element.classList.remove('fa-solid');
+                element.classList.add('fa-regular');
+            }
+        }
+
+        // 3. Simple Add Task logic for Capture List
+        function addCaptureTask() {
+            const input = document.getElementById('capture-input');
+            const list = document.getElementById('capture-list');
+
+            if (input.value.trim() !== '') {
+                const li = document.createElement('li');
+                li.className = 'flex items-start animate-fade-in';
+                li.innerHTML = `
+                    <input type="checkbox" class="checkbox-custom mt-0.5 mr-3">
+                    <span class="task-text text-sm flex-1">${input.value}</span>
+                `;
+                // Insert at top
+                list.insertBefore(li, list.firstChild);
+                input.value = '';
+
+                // Re-init listener for the new checkbox
+                initCheckboxes();
+            }
+        }
+
+        // Allow Enter key to add task
+        document.getElementById('capture-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addCaptureTask();
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCheckboxes();
+        });
+
+    </script>
+</body>
+
+</html>

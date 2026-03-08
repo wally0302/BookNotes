@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上線時間管理術 - 核心心法筆記</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .note-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* 標籤樣式 */
+        .tag-mindset {
+            background-color: #fce7f3;
+            color: #be185d;
+        }
+
+        /* 粉色：心智與精力 */
+        .tag-execution {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+
+        /* 靛色：執行與策略 */
+        .tag-system {
+            background-color: #d1fae5;
+            color: #047857;
+        }
+
+        /* 綠色：系統與維護 */
+        .tag-value {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+
+        /* 黃色：價值觀 */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 antialiased min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-center md:justify-start items-center">
+            <h1 class="font-bold text-xl tracking-wider flex items-center">
+                <i class="fa-solid fa-book-open text-blue-400 mr-3"></i>上線時間管理術：核心心法
+            </h1>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+
+        <!-- Header -->
+        <header class="mb-12 text-center md:text-left">
+            <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+                時間管理的<span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">底層邏輯</span>
+            </h2>
+            <p class="text-lg text-slate-600 max-w-2xl leading-relaxed mx-auto md:mx-0">
+                清單只是工具，真正決定成敗的是面對時間的價值觀。這 7 條核心心法，是維持「清單漏斗」完美運作的靈魂。
+            </p>
+        </header>
+
+        <!-- Masonry Grid Layout for Notes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+
+            <!-- Note 1: 精力管理 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 text-xl shrink-0">
+                        <i class="fa-solid fa-battery-full"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-mindset">精力管理</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">時間價值不等值律</h3>
+                <div class="flex-1 text-slate-600 space-y-3 leading-relaxed">
+                    <p>並非所有時間都有同等價值。人的意志力與專注度會隨時間遞減。</p>
+                    <div
+                        class="bg-slate-50 p-3 rounded-lg border-l-4 border-pink-400 font-bold text-slate-700 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-sun text-amber-500 mr-2"></i> 早上 > <i
+                            class="fa-solid fa-moon text-indigo-400 ml-2 mr-2"></i> 下午
+                    </div>
+                    <p class="text-sm">💡 <span class="font-bold">應用：</span>最困難、最需要深度思考的「最優先事項」，永遠排在早晨的第一個時段完成。</p>
+                </div>
+            </div>
+
+            <!-- Note 2: 優先級 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl shrink-0">
+                        <i class="fa-solid fa-ranking-star"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-execution">優先級策略</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">三大優先事項的拷問</h3>
+                <div class="flex-1 text-slate-600 space-y-4 leading-relaxed">
+                    <p>透過「問問題」來釐清什麼才是真正的 Top 3：</p>
+                    <ul class="space-y-3">
+                        <li class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                            <span class="font-bold text-indigo-800 flex items-center"><i
+                                    class="fa-solid fa-user-ninja mr-2"></i> 問自己：</span>
+                            <span class="text-sm mt-1 block">目的在於「學會放棄」。釐清前三名，有助於果斷放生那些不重要的事情。</span>
+                        </li>
+                        <li class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                            <span class="font-bold text-indigo-800 flex items-center"><i
+                                    class="fa-solid fa-people-arrows mr-2"></i> 問別人 (團隊)：</span>
+                            <span class="text-sm mt-1 block">了解夥伴實質專注之事，能對齊目標，打造更好的合作關係與心理安全感。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Note 3: 應變機制 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl shrink-0">
+                        <i class="fa-solid fa-fire-extinguisher"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-execution">應變機制</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">當急迫的事來臨時</h3>
+                <div class="flex-1 text-slate-600 space-y-3 leading-relaxed">
+                    <p>計畫永遠趕不上變化，系統必須具備彈性：</p>
+                    <div class="space-y-2 mt-3">
+                        <div class="flex items-start">
+                            <i class="fa-solid fa-shield-halved text-red-400 mt-1 mr-2"></i>
+                            <span><strong class="text-slate-800">設置應急區塊：</strong>每天的行事曆必須留白，預留一個專屬的「應急時間區塊」，作為緩衝。</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fa-solid fa-scale-unbalanced text-red-400 mt-1 mr-2"></i>
+                            <span><strong class="text-slate-800">區分屬性：</strong>冷靜區分「緊急性 (Urgency)」和「重要性
+                                (Importance)」，別讓別人的緊急變成你的重要。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note 4: 價值換算 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-xl shrink-0">
+                        <i class="fa-solid fa-comments-dollar"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-value">價值觀</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">時間價值換算法</h3>
+                <div class="flex-1 text-slate-600 space-y-3 leading-relaxed">
+                    <p>做決定前，將事情耗費的時間換算成「金錢價值」或「機會成本」。</p>
+                    <div
+                        class="bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2 text-center relative overflow-hidden">
+                        <i
+                            class="fa-solid fa-trash-can-arrow-up absolute -right-2 -bottom-2 text-6xl text-amber-100"></i>
+                        <span class="relative z-10 font-bold text-amber-900 block mb-2">自己倒垃圾 <span
+                                class="mx-2 text-slate-400">vs.</span> 花錢請人倒</span>
+                        <p class="relative z-10 text-xs text-amber-700 text-left">
+                            這段省下來的時間，如果拿來休息恢復精力、陪伴家人，或是創造更高價值的產出，是否大於外包的費用？</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note 5: 信任系統 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl shrink-0">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-mindset">大腦哲學</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">釋放大腦的空間</h3>
+                <div class="flex-1 text-slate-600 space-y-3 leading-relaxed">
+                    <p class="text-xl font-bold text-emerald-700 leading-tight">
+                        "大腦是用來思考的，不是用來記事情的。"
+                    </p>
+                    <p>為什麼我們需要首要清單與採集清單？</p>
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-slate-600 mt-2">
+                        <li>建立信任：知道所有任務都在系統裡，就不會焦慮遺漏。</li>
+                        <li>關閉開放迴圈 (Zeigarnik effect)。</li>
+                        <li>將大腦的 RAM 100% 釋放給當下的創意與深度工作。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Note 6: 系統維護 -->
+            <div
+                class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full lg:col-span-2">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-xl shrink-0">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-system">系統重整</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">每週日晚上的「大清洗」 (Weekly Review)</h3>
+                <div class="flex-1 text-slate-600 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="mb-3 text-sm">每週日晚上（或週一早晨）進行一次徹底的盤點與重整，這是系統不會崩壞的關鍵：</p>
+                        <div class="bg-teal-50 p-3 rounded text-sm text-teal-900 border border-teal-100 mb-2 font-bold">
+                            <i class="fa-solid fa-magnifying-glass mr-2"></i> 1. 檢視所有資訊入口
+                        </div>
+                        <p class="text-xs pl-8 text-slate-500 mb-3">清空 Facebook 的珍藏/轉發貼文、Google Keep 上的隨手筆記、信箱未讀。</p>
+                    </div>
+                    <div>
+                        <div
+                            class="bg-teal-50 p-3 rounded text-sm text-teal-900 border border-teal-100 mb-2 font-bold mt-2 md:mt-0">
+                            <i class="fa-solid fa-filter mr-2"></i> 2. 過濾與分流
+                        </div>
+                        <ul class="text-xs pl-8 text-slate-500 space-y-2">
+                            <li>➔ <strong class="text-slate-700">整理成知識庫：</strong> 有用的資訊、稍後閱讀的文章。</li>
+                            <li>➔ <strong class="text-slate-700">更新首要清單：</strong> 將新點子排入對應分類。</li>
+                            <li>➔ <strong class="text-slate-700">排入當週待辦：</strong> 決定下週要執行的重點。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note 7: 捕捉靈感 -->
+            <div class="note-card bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full">
+                <div class="flex justify-between items-start mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl shrink-0">
+                        <i class="fa-brands fa-google"></i>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full tag-system">工具應用</span>
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-slate-800">無阻礙捕捉法</h3>
+                <div class="flex-1 text-slate-600 space-y-3 leading-relaxed">
+                    <p>最棒的點子往往出現在洗澡、通勤或遛狗時。</p>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-center">
+                        <i class="fa-solid fa-mobile-screen-button text-3xl text-slate-400 mb-2"></i>
+                        <p class="font-bold text-slate-700 text-sm">臨時想到的事情，<br>秒開 Google Keep (或 Apple Notes) 記下。</p>
+                    </div>
+                    <p class="text-xs text-slate-500 italic mt-2 text-center">記下來後就忘掉它，等週日 review 時再處理。</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+
+</html>
